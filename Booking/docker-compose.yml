@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mysql8-container:
+    image: mysql
+    container_name: mysql-test
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Abc@1234
+      MYSQL_DATABASE: booking_hotel
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - ./sql/booking_hotel.sql:/docker-entrypoint-initdb.d/init-script.sql
+    networks:
+      - bookingapp-network
+
+  phpmyadmin5-container:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin5-container
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql8-container
+    networks:
+      - bookingapp-network
+
+  bookingapp-spring-container:
+    container_name: bookingapp-spring-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8081:8081
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql8-container:3306/booking_hotel?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      MYSQL_ROOT_PASSWORD: Abc@1234
+    depends_on:
+      - mysql8-container
+    networks:
+      - bookingapp-network
+    healthcheck:
+      test: ["CMD", "curl --fail http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  bookingapp-network:
+    name: bookingapp-network
+    driver: bridge
+#docker-compose -f ./docker-compose.yml up -d(start docker-compose)
+#docker-compose -f ./docker-compose.yml down(stop docker-compose)
+#docker log name_container(check log)
+
+#docker-compose -f ./docker-compose.yml up rm -s -f mysql8-container
+#docker-compose -f ./docker-compose.yml up -d mysql8-container
+
+#docker-compose -f ./docker-compose.yml up rm -s -f phpmyadmin5-container
+#docker-compose -f ./docker-compose.yml up -d phpmyadmin5-container
+
+#docker-compose -f ./docker-compose.yml up rm -s -f bookingapp-spring-container
+#docker-compose -f ./docker-compose.yml up -d bookingapp-spring-container --build
+#docker log bookingapp-spring-container
