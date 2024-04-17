@@ -59,8 +59,10 @@ public class WebSecurityConfig {
                         exception -> exception.authenticationEntryPoint(jwtAuthEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**","/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
-                        .permitAll()
+                        .requestMatchers("/api/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html").permitAll()
                         .requestMatchers("/role/**").hasRole("ADMIN")
                         .anyRequest()
                         .authenticated());
